@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
 
 class AuthController extends Controller
 {
@@ -23,12 +25,24 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
-    {
+    public function login(Request $request)
+    {   
+        $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required|min:5'
+            ]);
+
+           if($validator->fails())
+           {
+              $error_msg = $validator->messages()->all()[0];
+              return response()->json(['status' => false,'message'=> $error_msg, 'data' => null], 200);
+           }
+
+
         $credentials = request(['email', 'password']);
 
         if (! $token = auth('api')->attempt($credentials)) {
-            return response()->json(['status' => false,"message"=> 'Oops! Invalid Email Or Password.', 'data' => null], 401);
+            return response()->json(['status' => false,"message"=> 'Oops! Invalid Email Or Password.', 'data' => null], 200);
         }
        
 
@@ -77,7 +91,7 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
-            'status' => false,
+            'status' => true,
             'message' => 'Login Success',
             'data' => [
                 'access_token' => $token,
